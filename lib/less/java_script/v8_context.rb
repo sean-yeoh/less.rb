@@ -1,9 +1,11 @@
-begin
-  require 'v8' unless defined?(V8)
-rescue LoadError => e
-  warn "[WARNING] Please install gem 'therubyracer' to use Less."
-  raise e
-end
+# begin
+#   require 'v8' unless defined?(V8)
+# rescue LoadError => e
+#   warn "[WARNING] Please install gem 'therubyracer' to use Less."
+#   raise e
+# end
+
+require 'mini_racer'
 
 require 'pathname'
 
@@ -17,7 +19,8 @@ module Less
 
       def initialize(globals = nil)
         lock do
-          @v8_context = V8::Context.new
+          # @v8_context = V8::Context.new
+          @v8_context = MiniRacer::Context.new
           globals.each { |key, val| @v8_context[key] = val } if globals
         end
       end
@@ -56,49 +59,49 @@ module Less
 
       private
 
-        def lock(&block)
-          do_lock(&block)
-        rescue V8::JSError => e
-          if e.in_javascript?
-            js_value = e.value.respond_to?(:'[]')
-            name = js_value && e.value["name"]
-            constructor = js_value && e.value['constructor']
-            if name == "SyntaxError" ||
-                ( constructor && constructor.name == "LessError" )
-              raise Less::ParseError.new(e, js_value ? e.value : nil)
-            end
-          # NOTE: less/parser.js :
-          #
-          #   error = new(LessError)({
-          #      index: i,
-          #      type: 'Parse',
-          #      message: "missing closing `}`",
-          #      filename: env.filename
-          #   }, env);
-          #
-          # comes back as value: RuntimeError !
-          elsif e.value.to_s =~ /missing opening `\(`/
-            raise Less::ParseError.new(e.value.to_s)
-          end
-          raise Less::Error.new(e)
-        end
+        # def lock(&block)
+        #   do_lock(&block)
+        # rescue V8::JSError => e
+        #   if e.in_javascript?
+        #     js_value = e.value.respond_to?(:'[]')
+        #     name = js_value && e.value["name"]
+        #     constructor = js_value && e.value['constructor']
+        #     if name == "SyntaxError" ||
+        #         ( constructor && constructor.name == "LessError" )
+        #       raise Less::ParseError.new(e, js_value ? e.value : nil)
+        #     end
+        #   # NOTE: less/parser.js :
+        #   #
+        #   #   error = new(LessError)({
+        #   #      index: i,
+        #   #      type: 'Parse',
+        #   #      message: "missing closing `}`",
+        #   #      filename: env.filename
+        #   #   }, env);
+        #   #
+        #   # comes back as value: RuntimeError !
+        #   elsif e.value.to_s =~ /missing opening `\(`/
+        #     raise Less::ParseError.new(e.value.to_s)
+        #   end
+        #   raise Less::Error.new(e)
+        # end
 
-        def do_lock
-          result, exception = nil, nil
-          V8::C::Locker() do
-            begin
-              result = yield
-            rescue Exception => e
-              exception = e
-            end
-          end
+        # def do_lock
+        #   result, exception = nil, nil
+        #   V8::C::Locker() do
+        #     begin
+        #       result = yield
+        #     rescue Exception => e
+        #       exception = e
+        #     end
+        #   end
 
-          if exception
-            raise exception
-          else
-            result
-          end
-        end
+        #   if exception
+        #     raise exception
+        #   else
+        #     result
+        #   end
+        # end
 
     end
   end
