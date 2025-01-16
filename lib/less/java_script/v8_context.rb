@@ -59,7 +59,7 @@ module Less
 
       private
 
-        # def lock(&block)
+        def lock(&block)
         #   do_lock(&block)
         # rescue V8::JSError => e
         #   if e.in_javascript?
@@ -84,7 +84,7 @@ module Less
         #     raise Less::ParseError.new(e.value.to_s)
         #   end
         #   raise Less::Error.new(e)
-        # end
+        end
 
         # def do_lock
         #   result, exception = nil, nil
